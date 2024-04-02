@@ -21,9 +21,6 @@ spec:
     - description: The email from the certificate common name in JSON format
       name: email
   steps:
-    - env:
-        - name: COSIGN_EXPERIMENTAL
-          value: '1'
       image: 'gcr.io/projectsigstore/cosign:v1.13.1'
       name: cosign
       resources: {}
