@@ -1,0 +1,65 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: verify-and-deploy-unsigned
+spec:
+  params:
+    - description: name of the deployment to be patched
+      name: deployment-name
+      type: string
+    - description: url of the git repo for the code of deployment
+      name: git-url
+      type: string
+    - default: master
+      description: revision to be used from repo of the code for deployment
+      name: git-revision
+      type: string
+    - description: image to be build from the code
+      name: IMAGE
+      type: string
+    - default: workshop
+      description: Namespace where the Tekton project is installed by the release
+      name: namespace
+      type: string
+  tasks:
+    - name: fetch-repository
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: deleteExisting
+          value: 'true'
+        - name: revision
+          value: $(params.git-revision)
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+    - name: check-image
+      params:
+        - name: rox_api_token
+          value: roxsecrets
+        - name: rox_central_endpoint
+          value: roxsecrets
+        - name: image
+          value: $(params.IMAGE)
+      runAfter:
+        - fetch-repository
+      taskRef:
+        kind: Task
+        name: rox-image-check
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    - name: apply-manifests
+      runAfter:
+        - check-image
+      taskRef:
+        kind: Task
+        name: apply-manifests
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+  workspaces:
+    - name: shared-workspace
