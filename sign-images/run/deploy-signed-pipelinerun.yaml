@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: verify-and-deploy-signed
+  namespace: acs-pipeline
+  labels:
+    tekton.dev/pipeline: verify-and-deploy-signed
+spec:
+  params:
+    - name: deployment-name
+      value: pipelines-vote-api
+    - name: git-url
+      value: 'https://github.com/hyarlaga07/pipelines-vote-api.git'
+    - name: git-revision
+      value: master
+    - name: IMAGE
+      value: 'quay-gwz7n.apps.cluster-gwz7n.sandbox2622.opentlc.com/quayadmin/pipelines-vote-api:v4'
+    - name: namespace
+      value: acs-pipeline
+  pipelineRef:
+    name: verify-and-deploy-signed
+  serviceAccountName: pipeline
+  timeout: 1h0m0s
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: source-pvc
